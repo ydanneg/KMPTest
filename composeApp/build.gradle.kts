@@ -55,6 +55,7 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.androidx.lifecycle.viewmodel)
+            implementation("media.kamel:kamel-image:0.9.5")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

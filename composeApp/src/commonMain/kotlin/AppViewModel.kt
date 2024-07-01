@@ -9,8 +9,10 @@ import kotlinx.coroutines.launch
 data class Ticker(
     val id: Int,
     val symbol: String,
+    val name: String,
     val price: String,
-    val btcPrice: String
+    val btcPrice: String,
+    val imageUrl: String
 )
 
 data class UiState(
@@ -46,9 +48,11 @@ class AppViewModel : ViewModel() {
                         Ticker(
                             id = currency.id,
                             symbol = currency.symbol,
-                            price = currency.quote.findPrice("USD").round(4),
-                            btcPrice = byBtc[currency.symbol]?.quote?.findPrice("BTC")?.round(8)
-                                ?: "-"
+                            price = "$${currency.quote.findPrice("USD").round(4)}",
+                            btcPrice = "₿${byBtc[currency.symbol]?.quote?.findPrice("BTC")?.round(8)}"
+                                ?: "-",
+                            imageUrl = "https://s2.coinmarketcap.com/static/img/coins/32x32/${currency.id}.png",
+                            name = currency.name
                         )
                     }
                 }
@@ -65,8 +69,12 @@ class AppViewModel : ViewModel() {
         return entries.find { entry -> entry.key == key }?.value?.price ?: "0.0"
     }
 
-    private fun String.round(decimals: Int = 4): String =
-        "${substringBefore(".")}.${substringAfter(".").take(decimals)}"
+    private fun String.round(decimals: Int = 4): String {
+        if (contains(".")) {
+            return "${substringBefore(".")}.${substringAfter(".").take(decimals)}"
+        }
+        return this
+    }
 
     private fun setState(reducer: UiState.() -> UiState) {
         _state.value = state.value.reducer()
