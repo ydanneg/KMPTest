@@ -1,5 +1,7 @@
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -7,12 +9,14 @@ import kotlinx.coroutines.launch
 data class Ticker(
     val id: Int,
     val symbol: String,
-    val price: String
+    val price: String,
+    val btcPrice: String
 )
 
 data class UiState(
     val currencies: List<Ticker> = listOf(),
-    val loading: Boolean = false
+    val loading: Boolean = false,
+    val error: String? = null
 )
 
 class AppViewModel : ViewModel() {
@@ -26,28 +30,43 @@ class AppViewModel : ViewModel() {
         viewModelScope.launch {
             setState { copy(loading = true) }
             runCatching {
-                val currencies = api.getListings().data.map {
-                    Ticker(
-                        id = it.id,
-                        symbol = it.symbol,
-                        price = it.quote.findPrice("USD")
+                val currencies = coroutineScope {
+                    val usd = async {
+                        api.getListings(priceCurrency = "USD")
+                    }
+                    val btc = async {
+                        api.getListings(priceCurrency = "BTC")
+                    }
 
-                    )
+                    val byUsd = usd.await().data?.associateBy { it.symbol } ?: mapOf()
+                    val byBtc = btc.await().data?.associateBy { it.symbol } ?: mapOf()
+
+                    byUsd.entries.map {
+                        val currency = it.value
+                        Ticker(
+                            id = currency.id,
+                            symbol = currency.symbol,
+                            price = currency.quote.findPrice("USD").round(4),
+                            btcPrice = byBtc[currency.symbol]?.quote?.findPrice("BTC")?.round(8)
+                                ?: "-"
+                        )
+                    }
                 }
                 setState { copy(currencies = currencies) }
-
+            }.onFailure {
+                println("error: ${it.message}")
+                setState { copy(error = "Error") }
             }
             setState { copy(loading = false) }
         }
     }
 
     private fun Map<String, Quote>.findPrice(key: String = "USD"): String {
-        return entries.find { entry -> entry.key == key }?.value?.price?.round() ?: "-"
+        return entries.find { entry -> entry.key == key }?.value?.price ?: "0.0"
     }
 
-    private fun Double.round(): String = with(this.toString()) {
-        "${substringBefore(".")}.${substringAfter(".").take(4)}"
-    }
+    private fun String.round(decimals: Int = 4): String =
+        "${substringBefore(".")}.${substringAfter(".").take(decimals)}"
 
     private fun setState(reducer: UiState.() -> UiState) {
         _state.value = state.value.reducer()

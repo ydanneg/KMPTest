@@ -55,27 +55,17 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.androidx.lifecycle.viewmodel)
-//            implementation(libs.bignum)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.kotlinx.coroutines.swing)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }
     }
 }
-
-//buildkonfig {
-//    packageName = 'com.example.app'
-//    // objectName = 'YourAwesomeConfig'
-//    // exposeObjectWithName = 'YourAwesomePublicConfig'
-//
-//    defaultConfigs {
-//        buildConfigField 'STRING', 'name', 'value'
-//    }
-//}
 
 android {
     namespace = "com.ydanneg.kmp"
