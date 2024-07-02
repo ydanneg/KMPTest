@@ -1,24 +1,19 @@
 package com.ydanneg.kmp
 
 import App
+import AppViewModel
+import DatabaseFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val viewModel = AppViewModel(DatabaseFactory(this).createDatabase().getDao())
         setContent {
-            App()
+            App(viewModel)
         }
     }
-}
-
-@Preview
-@Composable
-private fun AppAndroidPreview() {
-    App()
 }

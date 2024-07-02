@@ -1,3 +1,4 @@
+import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -9,6 +10,9 @@ fun main() = application {
         title = "KMPTest",
         state = rememberWindowState(width = 412.dp, height = 915.dp)
     ) {
-        App()
+        val viewModel = remember {
+            AppViewModel(DatabaseFactory().createDatabase().getDao())
+        }
+        App(viewModel)
     }
 }

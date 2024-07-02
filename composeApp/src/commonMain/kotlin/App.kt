@@ -25,11 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-@Preview
-fun App(viewModel: AppViewModel = AppViewModel()) {
+fun App(viewModel: AppViewModel) {
 
     MaterialTheme {
         val state = viewModel.state.collectAsState()

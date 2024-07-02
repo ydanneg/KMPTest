@@ -21,7 +21,9 @@ data class UiState(
     val error: String? = null
 )
 
-class AppViewModel : ViewModel() {
+class AppViewModel(
+    private val currencyDao: CurrencyDao
+) : ViewModel() {
 
     private val api = CoinMarketCapApi()
 
@@ -30,9 +32,27 @@ class AppViewModel : ViewModel() {
 
     init {
         viewModelScope.launch {
+            currencyDao.getAll()
+                .collect { items ->
+                    println("items: #${items.size}")
+                    setState {
+                        copy(currencies = items.map {
+                            Ticker(
+                                id = it.id,
+                                symbol = it.symbol,
+                                name = it.name,
+                                price = it.price,
+                                btcPrice = it.btcPrice,
+                                imageUrl = "https://s2.coinmarketcap.com/static/img/coins/32x32/${it.id}.png"
+                            )
+                        })
+                    }
+                }
+        }
+        viewModelScope.launch {
             setState { copy(loading = true) }
-            runCatching {
-                val currencies = coroutineScope {
+            coroutineScope {
+                runCatching {
                     val usd = async {
                         api.getListings(priceCurrency = "USD")
                     }
@@ -43,25 +63,24 @@ class AppViewModel : ViewModel() {
                     val byUsd = usd.await().data?.associateBy { it.symbol } ?: mapOf()
                     val byBtc = btc.await().data?.associateBy { it.symbol } ?: mapOf()
 
-                    byUsd.entries.map {
+                    val entities = byUsd.entries.map {
                         val currency = it.value
-                        Ticker(
+                        Currency(
                             id = currency.id,
                             symbol = currency.symbol,
                             price = "$${currency.quote.findPrice("USD").round(4)}",
-                            btcPrice = "₿${byBtc[currency.symbol]?.quote?.findPrice("BTC")?.round(8)}"
-                                ?: "-",
-                            imageUrl = "https://s2.coinmarketcap.com/static/img/coins/32x32/${currency.id}.png",
+                            btcPrice = "₿${byBtc[currency.symbol]?.quote?.findPrice("BTC")?.round(8)}",
                             name = currency.name
                         )
                     }
+                    currencyDao.insert(entities)
+                }.onFailure {
+                    println("error: ${it.message}")
+                    setState { copy(error = "Error") }
+                }.onSuccess {
+                    setState { copy(loading = false) }
                 }
-                setState { copy(currencies = currencies) }
-            }.onFailure {
-                println("error: ${it.message}")
-                setState { copy(error = "Error") }
             }
-            setState { copy(loading = false) }
         }
     }
 
