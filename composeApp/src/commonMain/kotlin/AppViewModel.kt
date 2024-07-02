@@ -1,10 +1,17 @@
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 data class Ticker(
     val id: Int,
@@ -12,7 +19,8 @@ data class Ticker(
     val name: String,
     val price: String,
     val btcPrice: String,
-    val imageUrl: String
+    val imageUrl: String,
+    val rank: Int
 )
 
 data class UiState(
@@ -32,68 +40,81 @@ class AppViewModel(
 
     init {
         viewModelScope.launch {
-            currencyDao.getAll()
-                .collect { items ->
-                    println("items: #${items.size}")
-                    setState {
-                        copy(currencies = items.map {
-                            Ticker(
-                                id = it.id,
-                                symbol = it.symbol,
-                                name = it.name,
-                                price = it.price,
-                                btcPrice = it.btcPrice,
-                                imageUrl = "https://s2.coinmarketcap.com/static/img/coins/32x32/${it.id}.png"
-                            )
-                        })
-                    }
-                }
+            fetchFromDatabase()
         }
-        viewModelScope.launch {
-            setState { copy(loading = true) }
-            coroutineScope {
-                runCatching {
-                    val usd = async {
-                        api.getListings(priceCurrency = "USD")
-                    }
-                    val btc = async {
-                        api.getListings(priceCurrency = "BTC")
-                    }
+//
+//        viewModelScope.launch {
+//            setState { copy(loading = true) }
+//            runCatching {
+//                fetchFromRemote()
+//            }.onFailure {
+//                println("error: ${it.message}")
+//                setState { copy(error = "Error") }
+//            }.onSuccess {
+//                setState { copy(loading = false) }
+//            }
+//        }
+    }
 
-                    val byUsd = usd.await().data?.associateBy { it.symbol } ?: mapOf()
-                    val byBtc = btc.await().data?.associateBy { it.symbol } ?: mapOf()
+    private suspend fun fetchFromRemote() = withContext(Dispatchers.IO) {
+        val entities = coroutineScope {
+            val usd = async { api.getListings(priceCurrency = "USD") }
+            val btc = async { api.getListings(priceCurrency = "BTC") }
 
-                    val entities = byUsd.entries.map {
-                        val currency = it.value
-                        Currency(
-                            id = currency.id,
-                            symbol = currency.symbol,
-                            price = "$${currency.quote.findPrice("USD").round(4)}",
-                            btcPrice = "₿${byBtc[currency.symbol]?.quote?.findPrice("BTC")?.round(8)}",
-                            name = currency.name
-                        )
-                    }
-                    currencyDao.insert(entities)
-                }.onFailure {
-                    println("error: ${it.message}")
-                    setState { copy(error = "Error") }
-                }.onSuccess {
-                    setState { copy(loading = false) }
-                }
+            val byUsd = usd.await().data?.associateBy { it.symbol } ?: mapOf()
+            val byBtc = btc.await().data?.associateBy { it.symbol } ?: mapOf()
+
+            byUsd.entries.map {
+                val currency = it.value
+                Currency(
+                    id = currency.id,
+                    symbol = currency.symbol,
+                    price = currency.quote.findPrice("USD"),
+                    btcPrice = byBtc[currency.symbol]?.quote?.findPrice("BTC") ?: 0.0,
+                    rank = currency.cmcRank,
+                    name = currency.name
+                )
             }
         }
+        currencyDao.insert(entities)
     }
 
-    private fun Map<String, Quote>.findPrice(key: String = "USD"): String {
-        return entries.find { entry -> entry.key == key }?.value?.price ?: "0.0"
+    private suspend fun fetchFromDatabase() = withContext(Dispatchers.IO) {
+        currencyDao.getAll()
+            .collect { items ->
+                val tickers = items.map {
+                    Ticker(
+                        id = it.id,
+                        symbol = it.symbol,
+                        name = it.name,
+                        price = "$${it.price.toPrecision(3)}",
+                        btcPrice = "₿${it.btcPrice.toPrecision(8)}",
+                        rank = it.rank,
+                        imageUrl = "https://s2.coinmarketcap.com/static/img/coins/32x32/${it.id}.png"
+                    )
+                }
+                setState {
+                    copy(currencies = tickers)
+                }
+            }
     }
 
-    private fun String.round(decimals: Int = 4): String {
-        if (contains(".")) {
-            return "${substringBefore(".")}.${substringAfter(".").take(decimals)}"
+    private fun Map<String, Quote>.findPrice(key: String = "USD"): Double {
+        return entries.find { entry -> entry.key == key }?.value?.price ?: 0.0
+    }
+
+    private fun Double.toPrecision(precision: Int) =
+        if (precision < 1) {
+            "${this.roundToInt()}"
+        } else {
+            val p = 10.0.pow(precision)
+            val v = (abs(this) * p).roundToInt()
+            val i = floor(v / p)
+            var f = "${floor(v - (i * p)).toInt()}"
+            while (f.length < precision) f = "0$f"
+            val s = if (this < 0) "-" else ""
+            "$s${i.toInt()}.$f"
         }
-        return this
-    }
 
     private fun setState(reducer: UiState.() -> UiState) {
         _state.value = state.value.reducer()

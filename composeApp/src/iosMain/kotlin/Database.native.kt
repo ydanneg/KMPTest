@@ -1,5 +1,5 @@
 import androidx.room.Room
-import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.sqlite.driver.NativeSQLiteDriver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import platform.Foundation.NSHomeDirectory
@@ -11,7 +11,7 @@ actual class DatabaseFactory {
             name = dbFilePath,
             factory = { CurrencyDatabase::class.instantiateImpl() }
         ).apply {
-            setDriver(BundledSQLiteDriver())
+            setDriver(NativeSQLiteDriver())
             setQueryCoroutineContext(Dispatchers.IO)
         }.build()
     }

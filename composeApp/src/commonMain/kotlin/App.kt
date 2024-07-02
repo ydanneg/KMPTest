@@ -18,13 +18,20 @@ import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.kamel.core.config.KamelConfig
+import io.kamel.core.config.fileFetcher
+import io.kamel.core.config.takeFrom
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import io.kamel.image.config.Default
+import io.kamel.image.config.LocalKamelConfig
 
 @Composable
 fun App(viewModel: AppViewModel) {
@@ -36,7 +43,13 @@ fun App(viewModel: AppViewModel) {
             contentAlignment = Alignment.Center
         ) {
             val lazyListState = rememberLazyListState()
-
+            val kamelConfig = remember {
+                KamelConfig {
+                    fileFetcher()
+                    imageBitmapCacheSize = 1000
+                    takeFrom(KamelConfig.Default)
+                }
+            }
             val currencies = state.value.currencies
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -48,11 +61,15 @@ fun App(viewModel: AppViewModel) {
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        KamelImage(
-                            modifier = Modifier.size(24.dp),
-                            resource = asyncPainterResource(it.imageUrl, key = it.id),
-                            contentDescription = ""
-                        )
+                        Text(text = "${it.rank}")
+                        Spacer(Modifier.width(8.dp))
+                        CompositionLocalProvider(LocalKamelConfig provides kamelConfig) {
+                            KamelImage(
+                                modifier = Modifier.size(24.dp),
+                                resource = asyncPainterResource(it.imageUrl, key = it.id),
+                                contentDescription = ""
+                            )
+                        }
                         Spacer(Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(

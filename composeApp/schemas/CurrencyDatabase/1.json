@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "6f8969870f74fb8f08c7af57f2ccaaef",
+    "identityHash": "bb076a2c7b7ea4896baf1ff0b2d9a249",
     "entities": [
       {
         "tableName": "Currency",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `symbol` TEXT NOT NULL, `name` TEXT NOT NULL, `price` TEXT NOT NULL, `btcPrice` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `symbol` TEXT NOT NULL, `name` TEXT NOT NULL, `price` REAL NOT NULL, `rank` INTEGER NOT NULL, `btcPrice` REAL NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -29,13 +29,19 @@
           {
             "fieldPath": "price",
             "columnName": "price",
-            "affinity": "TEXT",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rank",
+            "columnName": "rank",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "btcPrice",
             "columnName": "btcPrice",
-            "affinity": "TEXT",
+            "affinity": "REAL",
             "notNull": true
           }
         ],
@@ -49,7 +55,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6f8969870f74fb8f08c7af57f2ccaaef')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bb076a2c7b7ea4896baf1ff0b2d9a249')"
     ]
   }
 }

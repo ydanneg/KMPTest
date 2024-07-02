@@ -11,8 +11,8 @@ actual class DatabaseFactory(private val context: Context) {
             context = appContext,
             name = dbFile.absolutePath
         ).apply {
-            setDriver(BundledSQLiteDriver())
             setQueryCoroutineContext(Dispatchers.IO)
+            setDriver(BundledSQLiteDriver())
         }.build()
     }
 }

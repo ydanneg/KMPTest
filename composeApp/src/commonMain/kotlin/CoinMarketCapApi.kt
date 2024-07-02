@@ -38,12 +38,14 @@ data class Cryptocurrency(
     val id: Int,
     val name: String,
     val symbol: String,
+    @SerialName("cmc_rank")
+    val cmcRank: Int,
     val quote: Map<String, Quote>
 )
 
 @Serializable
 data class Quote(
-    val price: String
+    val price: Double
 )
 
 class CoinMarketCapApi {

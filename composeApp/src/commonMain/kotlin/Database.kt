@@ -12,10 +12,11 @@ abstract class CurrencyDatabase : RoomDatabase() {
 
 @Dao
 interface CurrencyDao {
+
     @Upsert
     suspend fun insert(item: List<Currency>)
 
-    @Query("SELECT * FROM Currency")
+    @Query("SELECT * FROM Currency ORDER by rank ASC")
     fun getAll(): Flow<List<Currency>>
 
     @Query("DELETE FROM Currency")
