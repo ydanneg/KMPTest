@@ -1,7 +1,7 @@
 package com.ydanneg.kmp
 
 import android.app.Application
-import di.initKoin
+import com.ydanneg.kmp.di.initKoin
 import org.koin.android.ext.koin.androidContext
 
 class KMPTestApplication : Application() {

@@ -1,3 +1,6 @@
+package com.ydanneg.kmp
+
+import com.ydanneg.kmp.ui.Ticker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async

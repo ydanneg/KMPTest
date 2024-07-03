@@ -1,3 +1,5 @@
+package com.ydanneg.kmp
+
 import androidx.room.Room
 import androidx.sqlite.driver.NativeSQLiteDriver
 import kotlinx.coroutines.Dispatchers

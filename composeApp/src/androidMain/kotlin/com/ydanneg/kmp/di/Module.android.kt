@@ -1,7 +1,7 @@
-package di
+package com.ydanneg.kmp.di
 
-import CurrencyDao
-import DatabaseFactory
+import com.ydanneg.kmp.CurrencyDao
+import com.ydanneg.kmp.DatabaseFactory
 import org.koin.dsl.module
 
 actual val platformModule = module {

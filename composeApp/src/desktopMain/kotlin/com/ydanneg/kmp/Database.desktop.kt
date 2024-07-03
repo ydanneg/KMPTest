@@ -1,18 +1,18 @@
-import android.content.Context
+package com.ydanneg.kmp
+
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.Dispatchers
+import java.io.File
 
-actual class DatabaseFactory(private val context: Context) {
+actual class DatabaseFactory {
     actual fun createDatabase(): CurrencyDatabase {
-        val appContext = context.applicationContext
-        val dbFile = appContext.getDatabasePath(dbFileName)
+        val dbFile = File(System.getProperty("java.io.tmpdir"), dbFileName)
         return Room.databaseBuilder<CurrencyDatabase>(
-            context = appContext,
             name = dbFile.absolutePath
         ).apply {
-            setQueryCoroutineContext(Dispatchers.IO)
             setDriver(BundledSQLiteDriver())
+            setQueryCoroutineContext(Dispatchers.IO)
         }.build()
     }
 }

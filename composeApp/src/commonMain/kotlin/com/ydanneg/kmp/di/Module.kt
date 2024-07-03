@@ -1,8 +1,8 @@
-package di
+package com.ydanneg.kmp.di
 
-import AppViewModel
-import CoinMarketCapApi
-import CurrencyRepository
+import com.ydanneg.kmp.ui.AppViewModel
+import com.ydanneg.kmp.CoinMarketCapApi
+import com.ydanneg.kmp.CurrencyRepository
 import org.koin.compose.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
