@@ -7,7 +7,7 @@ actual class DatabaseFactory {
     actual fun createDatabase(): CurrencyDatabase {
         val dbFile = File(System.getProperty("java.io.tmpdir"), dbFileName)
         return Room.databaseBuilder<CurrencyDatabase>(
-            name = dbFile.absolutePath,
+            name = dbFile.absolutePath
         ).apply {
             setDriver(BundledSQLiteDriver())
             setQueryCoroutineContext(Dispatchers.IO)

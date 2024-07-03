@@ -52,12 +52,14 @@ class CoinMarketCapApi {
 
     private fun client() = HttpClient() {
         install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-                ignoreUnknownKeys = true
-                explicitNulls = false
-            })
+            json(
+                Json {
+                    prettyPrint = true
+                    isLenient = true
+                    ignoreUnknownKeys = true
+                    explicitNulls = false
+                }
+            )
         }
         install(Logging) {
             level = LogLevel.ALL
@@ -67,7 +69,6 @@ class CoinMarketCapApi {
                     println(message)
                     println("</HTTP>")
                 }
-
             }
         }
 

@@ -32,10 +32,10 @@ import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import io.kamel.image.config.Default
 import io.kamel.image.config.LocalKamelConfig
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun App(viewModel: AppViewModel) {
-
+fun App(viewModel: AppViewModel = koinViewModel<AppViewModel>()) {
     MaterialTheme {
         val state = viewModel.state.collectAsState()
         Box(

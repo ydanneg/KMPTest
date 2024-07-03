@@ -1,8 +1,6 @@
 package com.ydanneg.kmp
 
 import App
-import AppViewModel
-import DatabaseFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,10 +8,8 @@ import androidx.activity.compose.setContent
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val viewModel = AppViewModel(DatabaseFactory(this).createDatabase().getDao())
         setContent {
-            App(viewModel)
+            App()
         }
     }
 }

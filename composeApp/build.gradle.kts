@@ -1,6 +1,4 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -10,6 +8,20 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.spotless)
+}
+
+spotless {
+    kotlin {
+        target("**/*.kt")
+        targetExclude("${layout.buildDirectory}/**/*.kt")
+        ktlint()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    kotlinGradle {
+        ktlint()
+    }
 }
 
 kotlin {
@@ -30,7 +42,7 @@ kotlin {
 //    }
 
     jvm("desktop")
-    
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -48,12 +60,15 @@ kotlin {
     sourceSets {
         all {
             languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
+            languageSettings.optIn("org.koin.core.annotation.KoinExperimentalAPI")
         }
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.koin.android)
+            implementation(libs.koin.androidx.compose)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -73,6 +88,9 @@ kotlin {
             implementation(libs.kamel.image)
             implementation(libs.androidx.room.runtime)
             implementation(libs.sqlite.bundled)
+            api(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
         }
         val desktopMain by getting
         desktopMain.dependencies {
@@ -144,12 +162,12 @@ compose.desktop {
         }
     }
 }
-//// https://github.com/JetBrains/compose-multiplatform/issues/4928
-//tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().configureEach {
+// // https://github.com/JetBrains/compose-multiplatform/issues/4928
+// tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().configureEach {
 //    if (name != "kspCommonMainKotlinMetadata") {
 //        dependsOn("kspCommonMainKotlinMetadata")
 //    }
-//}
+// }
 
 dependencies {
     ksp(libs.androidx.room.compiler)

@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:filename")
+
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Query
@@ -27,6 +29,5 @@ interface CurrencyDao {
 expect class DatabaseFactory {
     fun createDatabase(): CurrencyDatabase
 }
-
 
 internal const val dbFileName = "currencies.db"

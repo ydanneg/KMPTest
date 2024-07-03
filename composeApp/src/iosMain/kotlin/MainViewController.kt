@@ -1,9 +1,10 @@
-import androidx.compose.runtime.remember
 import androidx.compose.ui.window.ComposeUIViewController
+import di.initKoin
 
-fun MainViewController() = ComposeUIViewController {
-    val viewModel = remember {
-        AppViewModel(DatabaseFactory().createDatabase().getDao())
+fun MainViewController() = ComposeUIViewController(
+    configure = {
+        initKoin()
     }
-    App(viewModel)
+) {
+    App()
 }
