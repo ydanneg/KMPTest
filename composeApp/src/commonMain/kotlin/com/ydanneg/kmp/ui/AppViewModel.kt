@@ -37,16 +37,18 @@ class AppViewModel(
             }
         }
 
-        viewModelScope.launch {
-            setState { copy(loading = true) }
-            runCatching {
-                currencyRepository.updateFromRemote()
-            }.onFailure {
-                println("error: ${it.message}")
-                setState { copy(error = "Error") }
-            }.onSuccess {
-                setState { copy(loading = false) }
-            }
+        refresh()
+    }
+
+    fun refresh() = viewModelScope.launch {
+        setState { copy(loading = true) }
+        runCatching {
+            currencyRepository.updateFromRemote()
+        }.onFailure {
+            println("error: ${it.message}")
+            setState { copy(error = "Error", loading = false) }
+        }.onSuccess {
+            setState { copy(loading = false) }
         }
     }
 

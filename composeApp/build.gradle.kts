@@ -69,6 +69,7 @@ kotlin {
         all {
             languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
             languageSettings.optIn("org.koin.core.annotation.KoinExperimentalAPI")
+            languageSettings.optIn("androidx.compose.material.ExperimentalMaterialApi")
         }
 
         androidMain.dependencies {
