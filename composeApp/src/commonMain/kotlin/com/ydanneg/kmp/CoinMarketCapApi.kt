@@ -14,9 +14,6 @@ import io.ktor.client.request.parameter
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.core.use
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -47,7 +44,19 @@ data class Cryptocurrency(
 
 @Serializable
 data class Quote(
-    val price: Double
+    val price: Double,
+    @SerialName("volume_24h")
+    val volume24h: Double,
+    @SerialName("market_cap")
+    val marketCap: Double,
+    @SerialName("percent_change_1h")
+    val percentChange1h: Double,
+    @SerialName("percent_change_24h")
+    val percentChange24h: Double,
+    @SerialName("percent_change_7d")
+    val percentChange7d: Double,
+    @SerialName("last_updated")
+    val lastUpdated: String
 )
 
 class CoinMarketCapApi {
@@ -80,7 +89,7 @@ class CoinMarketCapApi {
         }
     }
 
-    suspend fun getListings(start: Int = 1, limit: Int = 100, priceCurrency: String = "USD"): CryptocurrencyListingResponse = withContext(Dispatchers.IO) {
+    suspend fun getListings(start: Int = 1, limit: Int = 100, priceCurrency: String): CryptocurrencyListingResponse =
         client().use {
             it.get("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest") {
                 parameter("start", start)
@@ -88,5 +97,4 @@ class CoinMarketCapApi {
                 parameter("convert", priceCurrency)
             }.body()
         }
-    }
 }

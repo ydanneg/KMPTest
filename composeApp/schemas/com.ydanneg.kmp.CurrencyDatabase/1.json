@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "bb076a2c7b7ea4896baf1ff0b2d9a249",
+    "identityHash": "0c5e6ec80abb2bba27b05144e4de0c3c",
     "entities": [
       {
-        "tableName": "Currency",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `symbol` TEXT NOT NULL, `name` TEXT NOT NULL, `price` REAL NOT NULL, `rank` INTEGER NOT NULL, `btcPrice` REAL NOT NULL, PRIMARY KEY(`id`))",
+        "tableName": "currencies",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `symbol` TEXT NOT NULL, `name` TEXT NOT NULL, `rank` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -27,21 +27,9 @@
             "notNull": true
           },
           {
-            "fieldPath": "price",
-            "columnName": "price",
-            "affinity": "REAL",
-            "notNull": true
-          },
-          {
             "fieldPath": "rank",
             "columnName": "rank",
             "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "btcPrice",
-            "columnName": "btcPrice",
-            "affinity": "REAL",
             "notNull": true
           }
         ],
@@ -51,11 +39,64 @@
             "id"
           ]
         }
+      },
+      {
+        "tableName": "quotes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `currencyId` INTEGER NOT NULL, `currency` TEXT NOT NULL, `price` REAL NOT NULL, `change1h` REAL NOT NULL, `change24h` REAL NOT NULL, `change7d` REAL NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "currencyId",
+            "columnName": "currencyId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currency",
+            "columnName": "currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "price",
+            "columnName": "price",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "change1h",
+            "columnName": "change1h",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "change24h",
+            "columnName": "change24h",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "change7d",
+            "columnName": "change7d",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bb076a2c7b7ea4896baf1ff0b2d9a249')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0c5e6ec80abb2bba27b05144e4de0c3c')"
     ]
   }
 }

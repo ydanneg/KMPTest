@@ -1,80 +1,60 @@
 package com.ydanneg.kmp
 
-import com.ydanneg.kmp.ui.Ticker
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import com.ydanneg.kmp.ui.QuoteCurrency
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
-import kotlin.math.abs
-import kotlin.math.floor
-import kotlin.math.pow
-import kotlin.math.roundToInt
+import kotlinx.coroutines.supervisorScope
 
 class CurrencyRepository(
     private val api: CoinMarketCapApi,
-    private val currencyDao: CurrencyDao
+    private val currencyDao: CurrencyDao,
+    private val quoteDao: QuoteDao
 ) {
 
-    val currencies = currencyDao.getAll().map {
-        it.map { it.toModel() }
-    }
+    val currencies = currencyDao.getAllWithQuotes()
 
-    private fun Currency.toModel() =
-        Ticker(
-            id = id,
-            symbol = symbol,
-            name = name,
-            price = "$${price.toPrecision(3)}",
-            btcPrice = "₿${btcPrice.toPrecision(8)}",
-            rank = rank,
-            imageUrl = "https://s2.coinmarketcap.com/static/img/coins/32x32/$id.png"
-        )
-
-    suspend fun updateFromRemote() = fetchFromRemote()
-
-    private suspend fun fetchFromRemote() = withContext(Dispatchers.IO) {
-        val entities = coroutineScope {
-            val usd = async { api.getListings(priceCurrency = "USD") }
-            val btc = async { api.getListings(priceCurrency = "BTC") }
+    suspend fun updateFromRemote() {
+        val entities: Map<CurrencyEntity, List<QuoteEntity>> = supervisorScope {
+            val usd = async { api.getListings(priceCurrency = QuoteCurrency.USD.name) }
+            val btc = async { api.getListings(priceCurrency = QuoteCurrency.BTC.name) }
 
             val byUsd = usd.await().data?.associateBy { it.symbol } ?: mapOf()
             val byBtc = btc.await().data?.associateBy { it.symbol } ?: mapOf()
 
-            byUsd.entries.map {
+            byUsd.entries.associate {
                 val currency = it.value
-                val btcPrice = byBtc[currency.symbol]?.quote?.findPrice("BTC") ?: 0.0
-                currency.toEntity(btcPrice)
+                val entity = currency.toEntity()
+                val quotes = listOfNotNull(
+                    currency.quote.findQuote(QuoteCurrency.USD)?.toEntity(currency.id, QuoteCurrency.USD),
+                    byBtc[currency.symbol]?.quote?.findQuote(QuoteCurrency.BTC)?.toEntity(currency.id, QuoteCurrency.BTC)
+                )
+                entity to quotes
             }
         }
-        currencyDao.insert(entities)
+
+        quoteDao.deleteAll()
+        quoteDao.insert(entities.values.flatten())
+        currencyDao.insert(entities.keys.toList())
     }
 
-    private fun Cryptocurrency.toEntity(btcPrice: Double) =
-        Currency(
+    private fun Cryptocurrency.toEntity() =
+        CurrencyEntity(
             id = id,
             symbol = symbol,
-            price = quote.findPrice("USD"),
-            btcPrice = btcPrice,
             rank = cmcRank,
             name = name
         )
 
-    private fun Map<String, Quote>.findPrice(key: String = "USD"): Double {
-        return entries.find { entry -> entry.key == key }?.value?.price ?: 0.0
+    private fun Quote.toEntity(currencyId: Int, currency: QuoteCurrency): QuoteEntity {
+        return QuoteEntity(
+            currencyId = currencyId,
+            currency = currency,
+            price = price,
+            change7d = percentChange7d,
+            change24h = percentChange24h,
+            change1h = percentChange1h
+        )
     }
 
-    private fun Double.toPrecision(precision: Int) =
-        if (precision < 1) {
-            "${this.roundToInt()}"
-        } else {
-            val p = 10.0.pow(precision)
-            val v = (abs(this) * p).roundToInt()
-            val i = floor(v / p)
-            var f = "${floor(v - (i * p)).toInt()}"
-            while (f.length < precision) f = "0$f"
-            val s = if (this < 0) "-" else ""
-            "$s${i.toInt()}.$f"
-        }
+    private fun Map<String, Quote>.findQuote(key: QuoteCurrency): Quote? =
+        entries.find { entry -> entry.key == key.name }?.value
 }
