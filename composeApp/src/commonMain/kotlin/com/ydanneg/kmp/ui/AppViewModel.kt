@@ -63,7 +63,7 @@ class AppViewModel(
                 setState { copy(currencies = currencies.map { it.toUiModel() }) }
             }
         }
-//        refresh()
+        refresh()
     }
 
     fun refresh() = viewModelScope.launch {
