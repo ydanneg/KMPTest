@@ -100,11 +100,11 @@ class AppViewModel(
 
     private fun Double.asChange(): Change =
         if (this < 0) {
-            Change.Down(toPrecision(2))
+            Change.Down(toPrecision(2, true))
         } else
-            Change.Up(toPrecision(2))
+            Change.Up(toPrecision(2, true))
 
-    private fun Double.toPrecision(precision: Int) =
+    private fun Double.toPrecision(precision: Int, mod: Boolean = false) =
         if (precision < 1) {
             "${this.roundToInt()}"
         } else {
@@ -113,7 +113,7 @@ class AppViewModel(
             val i = floor(v / p)
             var f = "${floor(v - (i * p)).toInt()}"
             while (f.length < precision) f = "0$f"
-            val s = if (this < 0) "-" else ""
+            val s = if (!mod && this < 0) "-" else ""
             "$s${i.toInt()}.$f"
         }
 
