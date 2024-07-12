@@ -104,6 +104,8 @@ kotlin {
             api(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+            api(libs.androidx.datastore.preferences.core)
+            api(libs.androidx.datastore.core.okio)
         }
 
         val desktopMain by getting
