@@ -15,7 +15,7 @@ val sharedModule = module {
     }
 
     single<CurrencyRepository> {
-        CurrencyRepository(get(), get(), get())
+        CurrencyRepository(get(), get(), get(), get())
     }
 
     viewModel { AppViewModel(get()) }

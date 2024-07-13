@@ -23,7 +23,7 @@ actual val platformModule = module {
                 inDomain = NSUserDomainMask,
                 appropriateForURL = null,
                 create = false,
-                error = null,
+                error = null
             )
             requireNotNull(documentDirectory).path + "/$dataStoreFileName"
         }

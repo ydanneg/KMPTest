@@ -1,18 +1,40 @@
 package com.ydanneg.kmp
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import com.ydanneg.kmp.ui.QuoteCurrency
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.supervisorScope
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlin.time.Duration.Companion.minutes
+
+private val minimumSyncTimeoutDuration = 1.minutes
 
 class CurrencyRepository(
     private val api: CoinMarketCapApi,
     private val currencyDao: CurrencyDao,
-    private val quoteDao: QuoteDao
+    private val quoteDao: QuoteDao,
+    private val preferences: DataStore<Preferences>
 ) {
 
     val currencies = currencyDao.getAllWithQuotes()
 
+    private val lastSyncPrefKey = longPreferencesKey("lastSync")
+
+    private suspend fun isTimeToSync() =
+        preferences.data.first()[lastSyncPrefKey]
+            ?.let { Instant.fromEpochMilliseconds(it) }
+            ?.let { it + minimumSyncTimeoutDuration < Clock.System.now() }
+            ?: true
+
     suspend fun updateFromRemote() {
+        if (!isTimeToSync()) {
+            return
+        }
         val entities: Map<CurrencyEntity, List<QuoteEntity>> = supervisorScope {
             val usd = async { api.getListings(priceCurrency = QuoteCurrency.USD.name) }
             val btc = async { api.getListings(priceCurrency = QuoteCurrency.BTC.name) }
@@ -29,6 +51,10 @@ class CurrencyRepository(
                 )
                 entity to quotes
             }
+        }
+
+        preferences.edit {
+            it[lastSyncPrefKey] = Clock.System.now().toEpochMilliseconds()
         }
 
         quoteDao.deleteAll()
